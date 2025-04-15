@@ -1,0 +1,61 @@
+networks:
+  xroad-security-server-net:
+    driver: bridge
+
+
+x-common: &common
+  restart: always
+  networks:
+    - xroad-security-server-net
+
+
+volumes:
+  mount-data-security-server-db: null
+  mount-data-security-server-config: null
+  mount-data-security-server-backup: null
+
+services:
+  security-server-db:
+    image: postgres:15
+    container_name: security-server-db
+    <<: *common
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # ports:
+    #   - 7777:5432
+    volumes:
+      - mount-data-security-server-db:/var/lib/postgresql/data
+  
+  security-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: security-server
+    <<: *common
+    depends_on:
+      security-server-db:
+        condition: service_healthy
+    environment:
+      - XROAD_TOKEN_PIN=123456xrd!
+      - XROAD_ADMIN_USER=xrd
+      - XROAD_ADMIN_PASSWORD=secret
+      - XROAD_LOG_LEVEL=INFO
+      - XROAD_DB_HOST=security-server-db
+      - XROAD_DB_PORT=5432
+      - XROAD_DB_PWD=postgres
+    # ports: 
+    #   - 4000:4000
+    #   - 5588:5588
+    #   - 443:8443
+    #   - 5500:5500
+    #   - 5577:5577
+    volumes:
+      - mount-data-security-server-config:/etc/xroad
+      - mount-data-security-server-backup:/var/lib/xroad

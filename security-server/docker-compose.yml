@@ -2,12 +2,10 @@ networks:
   xroad-security-server-net:
     driver: bridge
 
-
 x-common: &common
   restart: always
   networks:
     - xroad-security-server-net
-
 
 volumes:
   mount-data-security-server-db: null
@@ -35,7 +33,7 @@ services:
   
   security-server:
     build:
-      context: .
+      context: ./security-sever
       dockerfile: Dockerfile
     container_name: security-server
     <<: *common
@@ -43,17 +41,21 @@ services:
       security-server-db:
         condition: service_healthy
     environment:
-      - XROAD_TOKEN_PIN=123456xrd!
-      - XROAD_ADMIN_USER=xrd
-      - XROAD_ADMIN_PASSWORD=secret
+      - XROAD_TOKEN_PIN=TokenPin@123!
+      - XROAD_ADMIN_USER=admin
+      - XROAD_ADMIN_PASSWORD=Admin123123@
       - XROAD_LOG_LEVEL=INFO
       - XROAD_DB_HOST=security-server-db
       - XROAD_DB_PORT=5432
       - XROAD_DB_PWD=postgres
+    healthcheck:
+      interval: 5s
+      retries: 40
+      test: [ "CMD", "curl", "-f", "-k", "https://localhost:4000" ]
     # ports: 
     #   - 4000:4000
     #   - 5588:5588
-    #   - 443:8443
+    #   - 8443:8443
     #   - 5500:5500
     #   - 5577:5577
     volumes:

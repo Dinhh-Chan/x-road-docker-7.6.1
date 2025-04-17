@@ -1,11 +1,14 @@
 networks:
   xroad-security-server-net:
     driver: bridge
+  xroad-central-server-net:
+    driver: bridge
 
 x-common: &common
   restart: always
   networks:
     - xroad-security-server-net
+    - xroad-central-server-net
 
 volumes:
   mount-data-security-server-db: null
@@ -26,8 +29,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    # ports:
-    #   - 7777:5432
     volumes:
       - mount-data-security-server-db:/var/lib/postgresql/data
   
@@ -52,12 +53,18 @@ services:
       interval: 5s
       retries: 40
       test: [ "CMD", "curl", "-f", "-k", "https://localhost:4000" ]
-    # ports: 
-    #   - 4000:4000
-    #   - 5588:5588
-    #   - 8443:8443
-    #   - 5500:5500
-    #   - 5577:5577
     volumes:
       - mount-data-security-server-config:/etc/xroad
       - mount-data-security-server-backup:/var/lib/xroad
+  
+  security-server-setup:
+    build:
+      context: ./setup
+      dockerfile: Dockerfile
+    container_name: security-server-setup
+    <<: *common
+    restart: no
+    depends_on:
+      security-server:
+        condition: service_healthy
+    command: --insecure --variables-file /hurl-src/vars.env --file-root /hurl-files /hurl-src/setup.hurl --very-verbose --retry 18 --retry-interval 20000

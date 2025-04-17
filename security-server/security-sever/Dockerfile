@@ -5,4 +5,4 @@ ARG XROAD_ADMIN_USER=admin
 ARG XROAD_ADMIN_PASSWORD=Admin123123@
 
 RUN rm -f /etc/xroad/conf.d/local.ini
-COPY local-config.ini /etc/xroad/conf.d/local.ini
+COPY local-config.ini /etc/xroad/conf.d/local.inis
